@@ -8,7 +8,7 @@ import process_audio
 from harmonic_template import harmonic_template
 
 #%% parameters of the transcription
-NUM_SOURCES = 1
+NUM_SOURCES = 4
 
 #%% Load the data
 t1 = time.time();
@@ -24,7 +24,7 @@ while (condition):
     
     print(num_components)
     
-    model = sklearn.decomposition.NMF(n_components=num_components, max_iter=4, init='random', solver='mu')
+    model = sklearn.decomposition.NMF(n_components=num_components, max_iter=200, init='random', solver='mu')
     W = model.fit_transform(V)
     H = model.components_
     W_filtered = sp.ndimage.filters.correlate(W, template)
