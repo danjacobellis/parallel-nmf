@@ -22,14 +22,20 @@ num_components = 264
 condition = True
 while (condition):
     
-    model = sklearn.decomposition.NMF(n_components=num_components, max_iter=4)
+    print(num_components)
+    
+    model = sklearn.decomposition.NMF(n_components=num_components, max_iter=4, init='random', solver='mu')
     W = model.fit_transform(V)
     H = model.components_
     W_filtered = sp.ndimage.filters.correlate(W, template)
+    W_decimated = np.copy(W_filtered)
+    W_decimated[0:-1:3,:] = 0
+    W_decimated[2:-1:3,:] = 0
     
-    v_max = np.zeros(shape = (W_filtered.shape[1],1))
-    i_max = np.zeros(shape = (W_filtered.shape[1],1))
-    for i_basis, basis in enumerate(W_filtered.T):
+    v_max = np.zeros(shape = (W_decimated.shape[1],1))
+    i_max = np.zeros(shape = (W_decimated.shape[1],1))
+    for i_basis, basis in enumerate(W_decimated.T):
+        
         i_max[i_basis] = np.argmax(basis)
         v_max[i_basis] = basis[i_max[i_basis].astype('int')]
         
@@ -45,7 +51,8 @@ while (condition):
     num_components = updated_num_components
 
 #%% permute the matrix so that the notes are in ascending order
-    new_ordering = np.hstack(i_rank_k)
-    W = W[:,new_ordering]
-    H = H[new_ordering,:]
-    note_dictionary = midi_nn[i_max[new_ordering].astype('int')];
+new_ordering = np.hstack(i_rank_k)
+W = W[:,new_ordering]
+W_filtered = W_filtered[:,new_ordering]
+H = H[new_ordering,:]
+note_dictionary = midi_nn[i_max[new_ordering].astype('int')];
