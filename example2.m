@@ -5,7 +5,7 @@ inv_level = @(level,phase) (10.^(level./20)).*exp(1j*phase);
 %% load audio
 [y,Fs] = audioread('tetrisA_mono.wav');
 y = mean(y,2);
-y = y(1:1e6);
+% y = y(1:1e6);
 t = (0:length(y)-1)/Fs;
 
 %% CQT
@@ -22,12 +22,12 @@ TFD = level(TFD);
 %% 
 
 % remove percussive component
-if 0
+if 1
     TFD = medfilt1(TFD,251,[],2);
 end
 
 % factor matrix and reconstruct
-if 1
+if 0
     offset = min(TFD(:));
     TFD = TFD - offset;
     [W,H] = nnmf(TFD,30);
@@ -39,3 +39,5 @@ cfs.c = inv_level(TFD,phase);
 cfs.c = [cfs.c;flipud(cfs.c)];
 xrec = icqt(cfs,g,fshifts);
 
+%% save to mat file
+save('tetrisA_mono_cqt.mat', 'cfs', '-v7.3')
