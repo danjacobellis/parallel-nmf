@@ -30,12 +30,13 @@ W,H =nnmf(V,num_components, num_iterations)
 
 ## Requirements
  - Julia 1.11
- - [CuArrays.jl][2]
+ - [CuArrays.jl][1]
  - MATLAB
    - CQT function - to generate time-frequency decomosition
    - nnmf function - for benchmark comparisons
  - Scikit-learn
    - decomposition.nmf -for benchmark comparisons
- [2]:https://github.com/JuliaGPU/CuArrays.jl
+ 
+ [1]:https://github.com/JuliaGPU/CuArrays.jl
  
 
