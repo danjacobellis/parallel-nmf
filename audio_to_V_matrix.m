@@ -3,7 +3,7 @@ if nargin < 2
     frame_size = [];
 end
 if isempty(frame_size)
-    frame_size = 40000;
+    frame_size = 8000;
 end
 
 [pathstr,name,~] = fileparts(input_file);
@@ -17,7 +17,7 @@ end
 y = mean(y,2);
 
 f_min = 55;
-f_max = 21120;
+f_max = 7040.000;
 [cfs,f,g,fshifts] = cqt(y,'SamplingFrequency',Fs,'TransformType','full',...
     'BinsPerOctave', 36, 'FrequencyLimits', [f_min, f_max]);
 
@@ -28,7 +28,7 @@ cfs.c = struct('phase', angle(cfs.c));
 cfs.g = g; clear g;
 cfs.fshifts = fshifts; clear fshifts;
 cfs.Fs = Fs;
-V = medfilt1(V,251,[],2);
+V = medfilt1(V,51,[],2);
 cfs.c.offset = -min(V);
 V = V + cfs.c.offset;
 
