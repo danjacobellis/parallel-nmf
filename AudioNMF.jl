@@ -7,8 +7,8 @@ using CuArrays;
 
 export audio_to_V, V_to_audio, nmf, rearrange_components
 
-function audio_to_V(filename)
-    y, Fs = wavread(filename)
+function audio_to_V(filename, subrange=Any);
+    y, Fs = wavread(filename, subrange=subrange);
     if (size(y,2) == 2);
         y = 0.5*(y[:,1] + y[:,2]);
     end
