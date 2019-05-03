@@ -1,6 +1,6 @@
 # Notebook to PDF (as a document)
 
-`jupyter-nbconvert progress_report.ipynb --to pdf --template template.tplx`
+`jupyter-nbconvert report.ipynb --to pdf --template template.tplx`
 
 # Notebook to PDF (as a slide deck)
 
