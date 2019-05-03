@@ -3,22 +3,29 @@
 ## Contents
 
 ---
-``nnmf.jl`` - Performs factorization on GPU using multiplicitive update rule.
+``AudioNMF.jl`` - Main module
+
 
 usage:
 ~~~
-include("nnmf.jl")
-W,H =nnmf(V,num_components, num_iterations)
+include("AudioNMF.jl");
+using .AudioNMF
 ~~~
 
 ---
-``benchmark.ipynb`` - Summary of basic timing benchmarks
+``source_separation.ipynb`` - Exmple demonstrating:
+
+ - Conversion of an audiofile into the $V$ matrix
+ - Performing the factorization
+ - Permuting $W$ and $H$ in ascending note order
+ - Writing audio files containing a subset(s) of the components
 
 ---
 ``docs``
 - Project proposal
-- Report (TODO)
-- Slides for presentation (TODO)
+- Progress report
+- Final Report
+- Slides for presentation
 
 ---
 ``data``
