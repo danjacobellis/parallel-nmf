@@ -7,7 +7,7 @@ using CuArrays;
 
 export audio_to_V, V_to_audio, nmf, rearrange_components
 
-function audio_to_V(filename, subrange=Any);
+function audio_to_V(filename, subrange=:);
     y, Fs = wavread(filename, subrange=subrange);
     if (size(y,2) == 2);
         y = 0.5*(y[:,1] + y[:,2]);
@@ -33,21 +33,28 @@ function V_to_audio(V,S,filename)
     wavwrite(y_rec, filename, Fs=S["Fs"]);
 end;
 
-function nmf(V,num_components,max_iter)
+function nmf(V, num_components, max_iter, gpu=true)
     num_freq_bins = size(V,1);
     W_h = rand(num_freq_bins,num_components);
     H_h = rand(num_components,size(V,2));
-    epsilon1 = cu(1e-9*ones(num_components,size(V,2)));
-    epsilon2 = cu(1e-9*ones(num_freq_bins,num_components));
-    V = cu(V);
-    W = cu(W_h);
-    H = cu(H_h);
+    if (gpu)
+        epsilon1 = cu(1e-9*ones(num_components,size(V,2)));
+        epsilon2 = cu(1e-9*ones(num_freq_bins,num_components));
+        V = cu(V);
+        W = cu(W_h);
+        H = cu(H_h);
+    else
+        epsilon1 = 1e-9*ones(num_components,size(V,2));
+        epsilon2 = 1e-9*ones(num_freq_bins,num_components);
+    end
     for i_iter = 1:max_iter
         H = H .* (W'*V) ./ (W'*W*H .+ epsilon1)
         W = W .* (V*H') ./ (W*H*H' .+ epsilon2)
     end
-    W_h = collect(W);
-    H_h = collect(H);
+    if (gpu)
+        W_h = collect(W);
+        H_h = collect(H);
+    end
     return W_h,H_h
 end;
 
