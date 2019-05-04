@@ -4,6 +4,7 @@ using WAV;
 using DSP;
 using MATLAB
 using CuArrays;
+using CuArrays.CURAND;
 
 export audio_to_V, V_to_audio, nmf, rearrange_components
 
@@ -35,15 +36,15 @@ end;
 
 function nmf(V, num_components, max_iter, gpu=true)
     num_freq_bins = size(V,1);
-    W_h = rand(num_freq_bins,num_components);
-    H_h = rand(num_components,size(V,2));
     if (gpu)
+        V = cu(V);
+        W = curand(num_freq_bins,num_components);
+        H = curand(num_components,size(V,2));
         epsilon1 = cu(1e-9*ones(num_components,size(V,2)));
         epsilon2 = cu(1e-9*ones(num_freq_bins,num_components));
-        V = cu(V);
-        W = cu(W_h);
-        H = cu(H_h);
     else
+        W = rand(num_freq_bins,num_components);
+        H = rand(num_components,size(V,2));
         epsilon1 = 1e-9*ones(num_components,size(V,2));
         epsilon2 = 1e-9*ones(num_freq_bins,num_components);
     end
@@ -54,8 +55,11 @@ function nmf(V, num_components, max_iter, gpu=true)
     if (gpu)
         W_h = collect(W);
         H_h = collect(H);
+        return W_h,H_h
+    else
+        return W,H
     end
-    return W_h,H_h
+    
 end;
 
 function rearrange_components(W,H)
