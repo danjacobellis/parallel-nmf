@@ -77,9 +77,12 @@ function rearrange_components(W,H)
     template[1 .+ offset .+ harmonics] .= 1;
     
     # find f0 and sort
+    pad_len = size(W,1) - length(template);
+    skip_len = floor(Int64,length(template)/2);
     f0 = zeros(size(W,2))
     for i_col = 1:size(W,2)
-        f0[i_col] = findmax(xcorr(W[:,i_col],template))[2] - length(template)
+        xc = xcorr(W[:,i_col],template)[pad_len+skip_len+1:end-skip_len];     
+        f0[i_col] = findmax(xc)[2]
     end
     f0_ind = sortperm(Int.(f0));
     sort!(f0);
@@ -91,19 +94,41 @@ function rearrange_components(W,H)
     num_unique_notes = length(unique(f0));
     W2 = zeros(Float32,size(W,1),num_unique_notes);
     H2 = zeros(Float32,num_unique_notes,size(H,2));
+    f02 = zeros(Int64,num_unique_notes);
     i_f0 = 1;
     for i_note = 1:num_unique_notes
         W2[:,i_note] = W[:,i_f0];
         H2[i_note,:] = H[i_f0,:];
+        f02[i_note] = f0[i_f0];
         while ( (i_f0 < size(W,2)) && (f0[i_f0] == f0[i_f0+1]) )
             i_f0 += 1;
             W2[:,i_note] .+= W[:,i_f0];
-            H2[i_note,:] .+= H[i_f0,:]
+            H2[i_note,:] .+= H[i_f0,:];
         end
         i_f0 +=1
     end
     
-    return W,H,W2,H2,f0
+    # round each frequency to nearest midi note
+    midi_nn = round.(Int64, f02./3) .+ 32;
+    num_unique_notes = length(unique(midi_nn));
+    W3 = zeros(Float32,size(W,1),num_unique_notes);
+    H3 = zeros(Float32,num_unique_notes,size(H,2));
+    f03 = zeros(Int64,num_unique_notes);
+    i_f0 = 1;
+    for i_note = 1:num_unique_notes
+        W3[:,i_note] = W2[:,i_f0];
+        H3[i_note,:] = H2[i_f0,:];
+        f03[i_note] = midi_nn[i_f0];
+        while ( (i_f0 < size(W2,2)) && (midi_nn[i_f0] == midi_nn[i_f0+1]) )
+            i_f0 += 1;
+            W3[:,i_note] .+= W2[:,i_f0];
+            H3[i_note,:] .+= H2[i_f0,:];
+        end
+        i_f0 +=1
+    end
+    midi_nn = copy(f03);
+            
+    return W,H,f0,W2,H2,f02,W3,H3,midi_nn;
 end;
 
 end;
