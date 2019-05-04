@@ -23,12 +23,12 @@ function audio_to_V(filename, subrange=:);
     mid_ind = floor(Int64,length(S["f"])/2) - 1;
     V = S["cfs"]["c"][1:mid_ind,:];
     S["phase"] = angle.(V);
-    V = abs.(V);    
+    V = convert.(Float32,abs.(V));    
     return V,S;
 end;
 
 function V_to_audio(V,S,filename)
-    V = V .* exp.(1im*S["phase"]);
+    V = convert.(Float64,V) .* exp.(1im*S["phase"]);
     S["cfs"]["c"] = [V; reverse(V,dims=1)];
     y_rec = mxcall(:icqt, 1, S["cfs"], S["g"], S["fshifts"]);
     wavwrite(y_rec, filename, Fs=S["Fs"]);
@@ -38,15 +38,15 @@ function nmf(V, num_components, max_iter, gpu=true)
     num_freq_bins = size(V,1);
     if (gpu)
         V = cu(V);
-        W = curand(num_freq_bins,num_components);
-        H = curand(num_components,size(V,2));
-        epsilon1 = cu(1e-9*ones(num_components,size(V,2)));
-        epsilon2 = cu(1e-9*ones(num_freq_bins,num_components));
+        W = curand(Float32,num_freq_bins,num_components);
+        H = curand(Float32,num_components,size(V,2));
+        epsilon1 = cu(Float32(1e-9)*ones(Float32,num_components,size(V,2)));
+        epsilon2 = cu(Float32(1e-9)*ones(Float32,num_freq_bins,num_components));
     else
-        W = rand(num_freq_bins,num_components);
-        H = rand(num_components,size(V,2));
-        epsilon1 = 1e-9*ones(num_components,size(V,2));
-        epsilon2 = 1e-9*ones(num_freq_bins,num_components);
+        W = rand(Float32,num_freq_bins,num_components);
+        H = rand(Float32,num_components,size(V,2));
+        epsilon1 = Float32(1e-9)*ones(Float32,num_components,size(V,2));
+        epsilon2 = Float32(1e-9)*ones(Float32,num_freq_bins,num_components);
     end
     for i_iter = 1:max_iter
         H = H .* (W'*V) ./ (W'*W*H .+ epsilon1)
@@ -89,23 +89,21 @@ function rearrange_components(W,H)
     
     # combine components with the same f0
     num_unique_notes = length(unique(f0));
-    W2 = zeros(size(W,1),num_unique_notes);
-    H2 = zeros(num_unique_notes,size(H,2));
+    W2 = zeros(Float32,size(W,1),num_unique_notes);
+    H2 = zeros(Float32,num_unique_notes,size(H,2));
     i_f0 = 1;
     for i_note = 1:num_unique_notes
         W2[:,i_note] = W[:,i_f0];
         H2[i_note,:] = H[i_f0,:];
-        if i_f0 < size(W,2)
-            while (f0[i_f0] == f0[i_f0+1])
-                i_f0 += 1;
-                W2[:,i_note] .+= W[:,i_f0];
-                H2[i_note,:] .+= H[i_f0,:]
-            end
+        while ( (i_f0 < size(W,2)) && (f0[i_f0] == f0[i_f0+1]) )
+            i_f0 += 1;
+            W2[:,i_note] .+= W[:,i_f0];
+            H2[i_note,:] .+= H[i_f0,:]
         end
         i_f0 +=1
     end
     
-    return W,H,W2,H2
+    return W,H,W2,H2,f0
 end;
 
 end;
